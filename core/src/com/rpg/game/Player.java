@@ -1,27 +1,33 @@
 package com.rpg.game;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.math.Rectangle;
 
 public class Player {
     private Vector2 position;
-    private float width;
-    private float height;
     private float speed;
-    private Rectangle bounds; // Define the bounds rectangle
-    private float[] starVertices;
+    private Rectangle bounds;
+    private Animation<TextureRegion> walkAnimation;
+    private float stateTime; // Keeps track of animation state time
+    private TextureRegion staticSprite;
 
-    public Player(float x, float y, float width, float height) {
-        position = new Vector2(x, y);
-        this.width = width;
-        this.height = height;
-        this.speed = 100;
-        this.bounds = new Rectangle(x, y, width, height);
+    // Constructor with Animation parameter for walk cycle
+    public Player(float x, float y, float width, float height, Animation<TextureRegion> walkAnimation) {
+        this.position = new Vector2(0, 0);
+        this.speed = 100; // This can be changed to your preferred player speed
+        this.bounds = new Rectangle(64, 64, width, height);
+        this.stateTime = 0f;
     }
 
     public void update(float deltaTime) {
+        stateTime += deltaTime; // Accumulate elapsed animation time
+
+        // Player movement input
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             position.x -= speed * deltaTime;
         }
@@ -34,55 +40,44 @@ public class Player {
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
             position.y -= speed * deltaTime;
         }
+
+        // Update the bounds to the new position
+        bounds.setPosition(position.x, position.y);
     }
+
+    public void draw(SpriteBatch batch) {
+        // Get the current frame of the walk animation
+        TextureRegion currentFrame = walkAnimation.getKeyFrame(stateTime, true);
+        batch.draw(currentFrame, position.x, position.y, bounds.getWidth(), bounds.getHeight());
+
+        float drawWidth = getWidth() * 2; // Scale up the width
+        float drawHeight = getHeight() * 2; // Scale up the height
+        batch.draw(currentFrame, position.x, position.y, drawWidth, drawHeight);
+    }
+
+    // Additional methods if necessary...
 
     public Vector2 getPosition() {
         return position;
     }
 
+    public void setPosition(float x, float y) {
+        position.set(x, y);
+    }
+
     public float getWidth() {
-        return width;
+        return bounds.getWidth();
     }
 
     public float getHeight() {
-        return height;
+        return bounds.getHeight();
     }
 
-    // Inside Player.java
-
-    public void move(Vector2 movement, Rectangle playArea) {
-        Vector2 newPosition = position.cpy().add(movement);
-
-        // Create a new Rectangle for the new position bounds
-        Rectangle newBounds = new Rectangle(newPosition.x, newPosition.y, width, height);
-
-        // Check if the new position is inside the play area
-        if (playArea.overlaps(newBounds)) {
-            // Update position if within bounds
-            position = newPosition;
-            bounds.setPosition(position.x, position.y);
-        }
-    }
-
-    public void createStarModel() {
-        // Define the vertices for a simple star shape
-        starVertices = new float[] {
-                0, 0, // Center point
-                -10, -10,
-                10, -10,
-                // Repeat pattern for other points to form a star
-                // ...
-        };
-    }
-
-    public float[] getStarVertices() {
-        return starVertices;
-    }
-
-
-    // Also, add a getter for the speed
     public float getSpeed() {
         return speed;
     }
 
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
 }
